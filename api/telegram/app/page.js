@@ -1,0 +1,1 @@
+export default function Home(){return <main style={{fontFamily:"Arial",padding:32}}><h1>Iqbal Job Machine</h1><p>Telegram job scanner is ready.</p><p>Webhook: <code>/api/telegram/webhook</code></p><p>Setup: <code>/api/telegram/setup</code></p></main>}
