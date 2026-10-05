@@ -10,14 +10,38 @@ async function sendTelegram(method, body) {
 
 function analyze(text){
   const t=(text||"").toLowerCase();
-  const blocked=["otp","transfer uang","biaya pendaftaran","bayar","captcha","password","pin"];
-  if(blocked.some(x=>t.includes(x))) return {action:"SKIP",score:0,reasons:["Terdeteksi kata berisiko: OTP/pembayaran/CAPTCHA/credential"]};
+  const blocked=["otp","transfer uang","biaya pendaftaran","captcha","password","pin"];
+  if(blocked.some(x=>t.includes(x))) return {action:"SKIP",score:0,reasons:["Terdeteksi kata berisiko: OTP/CAPTCHA/credential"]};
+  if(/(?:bayar|transfer).{0,30}(?:pendaftaran|lamaran|administrasi|biaya)/.test(t))
+    return {action:"SKIP",score:0,reasons:["Lowongan meminta pembayaran/biaya lamaran"]};
+
   let score=0,reasons=[];
-  if(t.includes("operator produksi")){score+=45;reasons.push("Posisi Operator Produksi cocok");}
-  else if(/operator|helper|warehouse|teknisi/.test(t)){score+=28;reasons.push("Posisi terkait operator/helper/warehouse/teknisi");}
-  if(/smk|teknik elektronika|otomasi|automation/.test(t)){score+=20;reasons.push("Pendidikan/keahlian teknis relevan");}
-  if(/produksi|warehouse|gudang|shift|sop|maintenance|elektronik/.test(t)){score+=25;reasons.push("Tugas/lingkungan kerja relevan");}
-  if(/@|google\.com\/forms|docs\.google\.com\/forms/.test(t)){score+=5;reasons.push("Metode lamaran terdeteksi");}
+
+  // Candidate profile: SMK Teknik Elektronika Industri + warehouse/operations experience.
+  if(t.includes("operator produksi")){
+    score+=45;
+    reasons.push("Posisi Operator Produksi cocok");
+    score+=20;
+    reasons.push("Latar SMK Teknik Elektronika Industri relevan");
+    score+=20;
+    reasons.push("Pengalaman kerja operasional/warehouse relevan");
+  } else if(/operator|helper|warehouse|teknisi/.test(t)){
+    score+=35;
+    reasons.push("Posisi terkait pengalaman operator/helper/warehouse/teknisi");
+    score+=20;
+    reasons.push("Latar SMK Teknik Elektronika Industri relevan");
+  }
+
+  if(/produksi|warehouse|gudang|shift|sop|maintenance|elektronik/.test(t)){
+    score+=10;
+    reasons.push("Lingkungan/tugas kerja relevan");
+  }
+
+  if(/@|google\.com\/forms|docs\.google\.com\/forms/.test(t)){
+    score+=5;
+    reasons.push("Metode lamaran terdeteksi");
+  }
+
   score=Math.min(score,100);
   return {action:score>=80?"APPLY":score>=70?"REVIEW":"SKIP",score,reasons};
 }
