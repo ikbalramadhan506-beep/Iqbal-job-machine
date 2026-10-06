@@ -10,6 +10,60 @@ async function sendTelegram(body) {
   });
 }
 
+async function sendPhotoToTinyFish(msg, chatId) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const tinyfishKey = process.env.TINYFISH_API_KEY;
+  if (!token || !tinyfishKey || !msg?.photo?.length) return false;
+
+  const photo = msg.photo[msg.photo.length - 1];
+  const fileResp = await fetch("https://api.telegram.org/bot" + token + "/getFile?file_id=" + encodeURIComponent(photo.file_id));
+  const fileData = await fileResp.json();
+  const filePath = fileData?.result?.file_path;
+  if (!filePath) return false;
+
+  const imageUrl = "https://api.telegram.org/file/bot" + token + "/" + filePath;
+  const webhookBase = process.env.APP_BASE_URL || "https://iqbal2-job-machine-webhook-ikbal6.vercel.app";
+  const webhookUrl = webhookBase + "/api/telegram/webhook?source=tinyfish&chat_id=" + encodeURIComponent(chatId);
+
+  const goal =
+    "Read the job vacancy in the image carefully. Extract the company name, job position, location if visible, application email if visible, and application URL if visible. " +
+    "Then write a concise professional Indonesian cover letter specifically for that vacancy. " +
+    "Use ONLY these verified candidate facts: Muhammad Iqbal Ramadhan; born 08 November 2004; SMK Teknik Elektronika Industri, SMKN 1 Panyingkiran, 2020-2023; " +
+    "worked as Helper Warehouse at PT Kaldu Sari Nabati Plant Majalengka (2023-2024), Crew Store at PT Alfaria Trijaya Tbk (2024), and Helper at PT Tiki Jalur Nugraha Ekakurir (2024-2026); " +
+    "skills/strengths: disciplined, detail-oriented, responsible, teamwork, shift work, follows SOP, willing to learn and adapt. " +
+    "Do NOT invent degrees, certifications, machinery experience, production experience, years of experience, achievements, or other facts not listed above. " +
+    "If a detail is not visible in the image, return an empty string rather than guessing. " +
+    "Return JSON with keys: company, position, location, email, application_url, cover_letter.";
+
+  const response = await fetch("https://agent.tinyfish.ai/v1/automation/run-async", {
+    method: "POST",
+    headers: {
+      "X-API-Key": tinyfishKey,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      url: imageUrl,
+      goal,
+      webhook_url: webhookUrl,
+      browser_profile: "lite",
+      output_schema: {
+        type: "object",
+        properties: {
+          company: { type: "string" },
+          position: { type: "string" },
+          location: { type: "string" },
+          email: { type: "string" },
+          application_url: { type: "string" },
+          cover_letter: { type: "string" }
+        },
+        required: ["company", "position", "location", "email", "application_url", "cover_letter"]
+      }
+    })
+  });
+
+  return response.ok;
+}
+
 function extractEmails(text) {
   return [...new Set((text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi) || []).map(x => x.toLowerCase()))];
 }
@@ -45,15 +99,53 @@ function makeEmail(company, position) {
 }
 
 export async function POST(req) {
+  const url = new URL(req.url);
+
+  // TinyFish callback for photo-based vacancy processing.
+  if (url.searchParams.get("source") === "tinyfish") {
+    const chatId = url.searchParams.get("chat_id");
+    const payload = await req.json().catch(() => null);
+    const data = payload?.data || payload || {};
+    const result = data?.result || {};
+    if (chatId && payload?.status === "COMPLETED" && result?.cover_letter) {
+      const details =
+        "📸 LOWONGAN DARI FOTO\n\n" +
+        "🏢 PT: " + (result.company || "Tidak terdeteksi") + "\n" +
+        "💼 Posisi: " + (result.position || "Tidak terdeteksi") + "\n" +
+        "📍 Lokasi: " + (result.location || "Tidak terdeteksi") + "\n" +
+        (result.email ? "📧 Email: " + result.email + "\n" : "") +
+        (result.application_url ? "🔗 Link: " + result.application_url + "\n" : "") +
+        "\n📄 COVER LETTER SIAP PAKAI\n\n" +
+        result.cover_letter;
+      await sendTelegram({ chat_id: chatId, text: details });
+    } else if (chatId && payload?.status !== "COMPLETED") {
+      await sendTelegram({ chat_id: chatId, text: "⚠️ Foto lowongan belum berhasil diproses. Coba kirim ulang foto yang lebih jelas." });
+    }
+    return NextResponse.json({ ok: true });
+  }
+
   const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
   if (secret && req.headers.get("x-telegram-bot-api-secret-token") !== secret) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const update = await req.json().catch(() => null);
   const msg = update?.message || update?.channel_post;
+  const chatId = msg?.chat?.id;
+
+  // Photo vacancy: send the image to TinyFish vision/browser processing.
+  if (msg?.photo?.length && chatId) {
+    const started = await sendPhotoToTinyFish(msg, chatId).catch(() => false);
+    await sendTelegram({
+      chat_id: chatId,
+      text: started
+        ? "📸 Foto lowongan diterima. Saya sedang membaca lowongan dan membuat cover letter sesuai CV kamu. Tunggu sebentar..."
+        : "⚠️ Foto diterima, tetapi pemrosesan belum bisa dimulai. Coba kirim ulang foto."
+    });
+    return NextResponse.json({ ok: true, photo: true });
+  }
+
   const text = msg?.text || msg?.caption || "";
   if (!text) return NextResponse.json({ ok: true, ignored: true });
 
-  const chatId = msg?.chat?.id;
   const company = extractCompany(text);
   const emails = extractEmails(text);
   const forms = extractForms(text);
@@ -91,6 +183,5 @@ export async function POST(req) {
   }
 
   if (chatId) await sendTelegram({ chat_id: chatId, text: reply });
-
   return NextResponse.json({ ok: true, company, positions, emails, forms });
 }
