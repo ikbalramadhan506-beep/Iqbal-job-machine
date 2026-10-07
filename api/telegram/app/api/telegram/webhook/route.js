@@ -23,11 +23,11 @@ async function sendPhotoToTinyFish(msg, chatId) {
 
   const imageUrl = "https://api.telegram.org/file/bot" + token + "/" + filePath;
   const webhookBase = process.env.APP_BASE_URL || "https://iqbal2-job-machine-webhook-ikbal6.vercel.app";
-  const webhookUrl = webhookBase + "/api/telegram/webhook?source=tinyfish&chat_id=" + encodeURIComponent(chatId);
+  const webhookUrl = webhookBase + "/api/tinyfish/webhook";
 
   const goal =
     "Read the job vacancy in the image carefully. Extract the company name, job position, location if visible, application email if visible, and application URL if visible. " +
-    "Then write a concise professional Indonesian cover letter specifically for that vacancy. " +
+    "CHAT_ID:" + chatId + " Then write a concise professional Indonesian cover letter specifically for that vacancy. " +
     "Use ONLY these verified candidate facts: Muhammad Iqbal Ramadhan; born 08 November 2004; SMK Teknik Elektronika Industri, SMKN 1 Panyingkiran, 2020-2023; " +
     "worked as Helper Warehouse at PT Kaldu Sari Nabati Plant Majalengka (2023-2024), Crew Store at PT Alfaria Trijaya Tbk (2024), and Helper at PT Tiki Jalur Nugraha Ekakurir (2024-2026); " +
     "skills/strengths: disciplined, detail-oriented, responsible, teamwork, shift work, follows SOP, willing to learn and adapt. " +
