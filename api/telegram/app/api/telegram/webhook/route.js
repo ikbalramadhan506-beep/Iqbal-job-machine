@@ -73,27 +73,42 @@ export async function POST(req) {
   const formText = forms.length ? forms.map(x => "• " + x).join("\n") : "Tidak ada Google Form";
 
   let reply =
-    "📋 DATA LOWONGAN\n\n" +
-    "🏢 PT: " + company + "\n" +
-    "💼 Posisi: " + (positions.length ? positions.join(" | ") : "Tidak terdeteksi") + "\n\n" +
-    "📧 Email / From:\n" + emailText + "\n\n" +
-    "📝 Google Form:\n" + formText;
+    "<b>📋 DATA LOWONGAN</b>\n\n" +
+    "🏢 <b>PT:</b> " + escapeHtml(company) + "\n" +
+    "💼 <b>Posisi:</b> " + escapeHtml(positions.length ? positions.join(" | ") : "Tidak terdeteksi") + "\n\n" +
+    "📧 <b>Email / From:</b>\n" + escapeHtml(emailText) + "\n\n" +
+    "📝 <b>Google Form:</b>\n" + escapeHtml(formText);
+
+  let replyMarkup = null;
 
   if (emails.length) {
+    const subject = "Lamaran Kerja – " + position + " – Muhammad Iqbal Ramadhan";
+    const coverLetter = makeEmail(company, position);
+
     reply +=
       "\n\n━━━━━━━━━━━━━━━━━━━━\n" +
-      "✉️ COVER LETTER — SIAP COPY\n" +
+      "✉️ <b>COVER LETTER — SIAP COPY</b>\n" +
       "━━━━━━━━━━━━━━━━━━━━\n\n" +
-      "Subject: Lamaran Kerja – " + position + " – Muhammad Iqbal Ramadhan\n\n" +
-      makeEmail(company, position) +
-      "\n\n📎 Lampiran: Cv_Muhammad_Iqbal_Ramadhan.pdf";
+      "<b>Subject</b>\n" +
+      "<pre>" + escapeHtml(subject) + "</pre>\n\n" +
+      "<b>Cover Letter</b>\n" +
+      "<pre>" + escapeHtml(coverLetter) + "</pre>\n\n" +
+      "📎 <b>Lampiran:</b> Cv_Muhammad_Iqbal_Ramadhan.pdf";
+
+    if (subject.length <= 256) {
+      replyMarkup = {
+        inline_keyboard: [[
+          {
+            text: "📋 Copy Subject",
+            copy_text: { text: subject }
+          }
+        ]]
+      };
+    }
   }
 
   if (forms.length) {
-    reply +=
-      "\n\n━━━━━━━━━━━━━━━━━━━━\n" +
-      "📝 DATA GOOGLE FORM — SIAP COPY\n" +
-      "━━━━━━━━━━━━━━━━━━━━\n" +
+    const formPack =
       "Nama: Muhammad Iqbal Ramadhan\n" +
       "Tanggal lahir: 08 November 2004\n" +
       "Email: ikbalramadhan506@gmail.com\n" +
@@ -101,9 +116,19 @@ export async function POST(req) {
       "Pendidikan: SMK Teknik Elektronika Industri – SMKN 1 Panyingkiran (2020–2023)\n" +
       "Pengalaman: Helper Warehouse – PT Kaldu Sari Nabati Plant Majalengka; Crew Store – PT Alfaria Trijaya Tbk; Helper – PT Tiki Jalur Nugraha Ekakurir\n" +
       "CV: Cv_Muhammad_Iqbal_Ramadhan.pdf";
+
+    reply +=
+      "\n\n━━━━━━━━━━━━━━━━━━━━\n" +
+      "📝 <b>DATA GOOGLE FORM — SIAP COPY</b>\n" +
+      "━━━━━━━━━━━━━━━━━━━━\n" +
+      "<pre>" + escapeHtml(formPack) + "</pre>";
   }
 
-  if (chatId) await sendTelegram({ chat_id: chatId, text: reply });
+  if (chatId) {
+    const payload = { chat_id: chatId, text: reply, parse_mode: "HTML" };
+    if (replyMarkup) payload.reply_markup = replyMarkup;
+    await sendTelegram(payload);
+  }
 
   return NextResponse.json({ ok: true, company, positions, emails, forms });
 }
