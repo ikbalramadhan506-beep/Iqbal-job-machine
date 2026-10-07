@@ -19,23 +19,18 @@ export async function POST(req){
   const m=goal.match(/CHAT_ID:(-?\d+)/);
   const chatId=m?.[1];
 
-  if(chatId && status==="COMPLETED" && result?.cover_letter){
-    const message =
-      "📸 LOWONGAN DARI FOTO\n\n" +
-      "🏢 PT: " + (result.company || "Tidak terdeteksi") + "\n" +
-      "💼 Posisi: " + (result.position || "Tidak terdeteksi") + "\n" +
-      "📍 Lokasi: " + (result.location || "Tidak terdeteksi") + "\n" +
-      (result.email ? "📧 Email: " + result.email + "\n" : "") +
-      (result.application_url ? "🔗 Link: " + result.application_url + "\n" : "") +
-      "\n📄 COVER LETTER SIAP PAKAI\n\n" +
-      result.cover_letter;
-    await sendTelegram({chat_id:chatId,text:message});
-  } else if(chatId && status!=="COMPLETED"){
+  if(chatId && status==="COMPLETED"){
+    const company=result.company || "Tidak terdeteksi";
+    const email=result.email || "Tidak ditemukan";
     await sendTelegram({
       chat_id:chatId,
-      text:"⚠️ Foto lowongan belum berhasil diproses. Coba kirim ulang foto yang lebih jelas."
+      text:"📸 HASIL LOWONGAN\n\n🏢 PT/Perusahaan: "+company+"\n📧 Email/From: "+email
+    });
+  } else if(chatId && (status==="FAILED" || status==="CANCELLED")){
+    await sendTelegram({
+      chat_id:chatId,
+      text:"⚠️ Foto belum bisa dibaca. Kirim ulang foto lowongan yang lebih jelas."
     });
   }
-
   return NextResponse.json({ok:true});
 }
