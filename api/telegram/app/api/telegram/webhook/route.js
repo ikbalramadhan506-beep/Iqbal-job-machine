@@ -53,6 +53,24 @@ function makeEmail(company, position) {
   );
 }
 
+function makeCandidateData() {
+  return (
+    "Nama: Muhammad Iqbal Ramadhan\n" +
+    "Tanggal lahir: 08 November 2004\n" +
+    "Email: ikbalramadhan506@gmail.com\n" +
+    "No. HP: 088971323962\n" +
+    "Pendidikan: SMK Teknik Elektronika Industri – SMKN 1 Panyingkiran (2020–2023)\n" +
+    "Pengalaman:\n" +
+    "1. Helper Warehouse – PT Kaldu Sari Nabati Plant Majalengka (2023–2024)\n" +
+    "2. Crew Store – PT Alfaria Trijaya Tbk (2024)\n" +
+    "3. Helper – PT Tiki Jalur Nugraha Ekakurir (2024–2026)\n" +
+    "Keahlian: Gesit, Teliti, Bertanggung jawab\n" +
+    "Bidang pendidikan: Instalasi, maintenance, perbaikan perangkat elektronik, sistem kontrol otomatis, dan dasar otomasi industri\n" +
+    "CV: Cv_Muhammad_Iqbal_Ramadhan.pdf\n" +
+    "Alamat: Belum tersedia di data CV"
+  );
+}
+
 export async function POST(req) {
   const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
   if (secret && req.headers.get("x-telegram-bot-api-secret-token") !== secret) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -89,39 +107,22 @@ export async function POST(req) {
       "\n\n━━━━━━━━━━━━━━━━━━━━\n" +
       "✉️ <b>COVER LETTER — SIAP COPY</b>\n" +
       "━━━━━━━━━━━━━━━━━━━━\n\n" +
-      "<b>Subject</b>\n" +
-      "<pre>" + escapeHtml(subject) + "</pre>\n\n" +
-      "<b>Cover Letter</b>\n" +
-      "<pre>" + escapeHtml(coverLetter) + "</pre>\n\n" +
+      "<b>Subject</b>\n<pre>" + escapeHtml(subject) + "</pre>\n\n" +
+      "<b>Cover Letter</b>\n<pre>" + escapeHtml(coverLetter) + "</pre>\n\n" +
       "📎 <b>Lampiran:</b> Cv_Muhammad_Iqbal_Ramadhan.pdf";
 
     if (subject.length <= 256) {
-      replyMarkup = {
-        inline_keyboard: [[
-          {
-            text: "📋 Copy Subject",
-            copy_text: { text: subject }
-          }
-        ]]
-      };
+      replyMarkup = { inline_keyboard: [[{ text: "📋 Copy Subject", copy_text: { text: subject } }]] };
     }
   }
 
   if (forms.length) {
-    const formPack =
-      "Nama: Muhammad Iqbal Ramadhan\n" +
-      "Tanggal lahir: 08 November 2004\n" +
-      "Email: ikbalramadhan506@gmail.com\n" +
-      "No. HP: 088971323962\n" +
-      "Pendidikan: SMK Teknik Elektronika Industri – SMKN 1 Panyingkiran (2020–2023)\n" +
-      "Pengalaman: Helper Warehouse – PT Kaldu Sari Nabati Plant Majalengka; Crew Store – PT Alfaria Trijaya Tbk; Helper – PT Tiki Jalur Nugraha Ekakurir\n" +
-      "CV: Cv_Muhammad_Iqbal_Ramadhan.pdf";
-
+    const candidateData = makeCandidateData();
     reply +=
       "\n\n━━━━━━━━━━━━━━━━━━━━\n" +
-      "📝 <b>DATA GOOGLE FORM — SIAP COPY</b>\n" +
+      "📝 <b>DATA DIRI — SATU BLOK SIAP COPY</b>\n" +
       "━━━━━━━━━━━━━━━━━━━━\n" +
-      "<pre>" + escapeHtml(formPack) + "</pre>";
+      "<pre>" + escapeHtml(candidateData) + "</pre>";
   }
 
   if (chatId) {
