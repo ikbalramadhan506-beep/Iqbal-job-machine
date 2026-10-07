@@ -72,6 +72,11 @@ function addBlock(title, value) {
   return "\n\n<b>" + escapeHtml(title) + "</b>\n<pre>" + escapeHtml(value) + "</pre>";
 }
 
+function addCopyButton(buttons, label, value) {
+  if (!value || String(value).length > 256) return;
+  buttons.push([{ text: "📋 Salin " + label, copy_text: { text: String(value) } }]);
+}
+
 export async function POST(req) {
   const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
   if (secret && req.headers.get("x-telegram-bot-api-secret-token") !== secret) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -95,7 +100,11 @@ export async function POST(req) {
     "\n\n<b>📧 EMAIL / FROM</b>\n<pre>" + escapeHtml(emails.length ? emails.join("\n") : "Tidak ada email ditemukan") + "</pre>" +
     "\n\n<b>📝 GOOGLE FORM</b>\n<pre>" + escapeHtml(forms.length ? forms.join("\n") : "Tidak ada Google Form") + "</pre>";
 
-  let replyMarkup = null;
+  const buttons = [];
+  addCopyButton(buttons, "PT", company);
+  if (positions.length === 1) addCopyButton(buttons, "Posisi", positions[0]);
+  if (emails.length === 1) addCopyButton(buttons, "Email", emails[0]);
+  if (forms.length === 1) addCopyButton(buttons, "Google Form", forms[0]);
 
   if (emails.length) {
     const subject = "Lamaran Kerja – " + position + " – Muhammad Iqbal Ramadhan";
@@ -103,20 +112,19 @@ export async function POST(req) {
     reply += addBlock("✉️ SUBJECT", subject);
     reply += addBlock("📝 COVER LETTER", coverLetter);
     reply += "\n\n📎 <b>LAMPIRAN</b>\n<pre>Cv_Muhammad_Iqbal_Ramadhan.pdf</pre>";
-    if (subject.length <= 256) {
-      replyMarkup = { inline_keyboard: [[{ text: "📋 Copy Subject", copy_text: { text: subject } }]] };
-    }
+    addCopyButton(buttons, "Subject", subject);
   }
 
   if (forms.length || emails.length) {
     for (const [title, value] of makeCandidateBlocks()) {
       reply += addBlock(title, value);
+      if (title !== "💼 PENGALAMAN KERJA") addCopyButton(buttons, title.replace(/^[^ ]+\s*/, ""), value);
     }
   }
 
   if (chatId) {
     const payload = { chat_id: chatId, text: reply, parse_mode: "HTML" };
-    if (replyMarkup) payload.reply_markup = replyMarkup;
+    if (buttons.length) payload.reply_markup = { inline_keyboard: buttons };
     await sendTelegram(payload);
   }
 
