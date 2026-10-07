@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 
 async function sendTelegram(body) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  if (!token) return;
-  await fetch("https://api.telegram.org/bot" + token + "/sendMessage", {
+  if (!token) return false;
+  const r = await fetch("https://api.telegram.org/bot" + token + "/sendMessage", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body)
   });
+  return r.ok;
 }
 
 async function sendPhotoToTinyFish(msg, chatId) {
@@ -33,10 +34,7 @@ async function sendPhotoToTinyFish(msg, chatId) {
 
   const response = await fetch("https://agent.tinyfish.ai/v1/automation/run-async", {
     method: "POST",
-    headers: {
-      "X-API-Key": tinyfishKey,
-      "Content-Type": "application/json"
-    },
+    headers: { "X-API-Key": tinyfishKey, "Content-Type": "application/json" },
     body: JSON.stringify({
       url: imageUrl,
       goal,
@@ -44,15 +42,45 @@ async function sendPhotoToTinyFish(msg, chatId) {
       browser_profile: "lite",
       output_schema: {
         type: "object",
-        properties: {
-          company: { type: "string" },
-          email: { type: "string" }
-        },
+        properties: { company: { type: "string" }, email: { type: "string" } },
         required: ["company", "email"]
       }
     })
   });
-
   return response.ok;
 }
 
+export async function POST(req) {
+  try {
+    const update = await req.json();
+    const msg = update?.message || update?.edited_message || update?.channel_post;
+    if (!msg) return NextResponse.json({ ok: true });
+
+    const chatId = msg?.chat?.id;
+    if (!chatId) return NextResponse.json({ ok: true });
+
+    if (msg.photo?.length) {
+      const started = await sendPhotoToTinyFish(msg, chatId);
+      if (started) {
+        await sendTelegram({
+          chat_id: chatId,
+          text: "📸 Foto lowongan diterima. Saya sedang mengambil nama PT dan email/From. Tunggu sebentar..."
+        });
+      } else {
+        await sendTelegram({
+          chat_id: chatId,
+          text: "⚠️ Foto diterima, tetapi proses pembacaan gagal dimulai. Kirim ulang foto."
+        });
+      }
+    } else if (msg.text || msg.caption) {
+      await sendTelegram({
+        chat_id: chatId,
+        text: "📄 Lowongan diterima. Kirim foto sebagai foto biasa jika ingin saya mengambil nama PT dan email/From."
+      });
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    return NextResponse.json({ ok: true });
+  }
+}
