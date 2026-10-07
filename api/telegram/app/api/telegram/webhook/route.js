@@ -30,14 +30,23 @@ function extractPositions(text) {
   return matches.slice(0, 5);
 }
 
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 function makeEmail(company, position) {
   return (
-    "Yth. HRD " + company + ",\n\n" +
-    "Perkenalkan, saya Muhammad Iqbal Ramadhan. Saya bermaksud melamar posisi " + position + " di " + company + ".\n\n" +
-    "Saya merupakan lulusan SMK Teknik Elektronika Industri dari SMKN 1 Panyingkiran (2020–2023) dan memiliki pengalaman sebagai Helper Warehouse di PT Kaldu Sari Nabati Plant Majalengka, Crew Store di PT Alfaria Trijaya Tbk, serta Helper di PT Tiki Jalur Nugraha Ekakurir. Saya terbiasa bekerja secara teliti, bertanggung jawab, mengikuti SOP, bekerja dalam tim maupun shift, serta siap belajar dan beradaptasi.\n\n" +
+    "Yth. Tim HRD " + company + ",\n\n" +
+    "Dengan hormat,\n\n" +
+    "Perkenalkan, saya Muhammad Iqbal Ramadhan. Melalui email ini, saya ingin mengajukan lamaran untuk posisi " + position + " di " + company + ".\n\n" +
+    "Saya merupakan lulusan SMK Teknik Elektronika Industri dari SMKN 1 Panyingkiran (2020–2023). Saya memiliki pengalaman kerja sebagai Helper Warehouse di PT Kaldu Sari Nabati Plant Majalengka, Crew Store di PT Alfaria Trijaya Tbk, serta Helper di PT Tiki Jalur Nugraha Ekakurir. Dari pengalaman tersebut, saya terbiasa bekerja secara teliti dan bertanggung jawab, mengikuti SOP, bekerja dalam tim maupun sistem shift, serta beradaptasi dengan lingkungan kerja yang dinamis.\n\n" +
+    "Saya memiliki ketertarikan untuk berkembang di bidang operasional dan siap mempelajari hal-hal baru sesuai kebutuhan perusahaan. Saya berharap dapat diberikan kesempatan untuk mengikuti proses seleksi dan menjelaskan kualifikasi saya lebih lanjut.\n\n" +
     "Sebagai bahan pertimbangan, saya melampirkan CV.\n\n" +
-    "Terima kasih atas perhatian dan kesempatan yang diberikan.\n\n" +
-    "Hormat saya,\n" +
+    "Terima kasih atas waktu dan perhatian Bapak/Ibu. Saya menantikan kesempatan untuk dapat mengikuti proses seleksi di " + company + ".\n\n" +
+    "Hormat saya,\n\n" +
     "Muhammad Iqbal Ramadhan\n" +
     "088971323962\n" +
     "ikbalramadhan506@gmail.com"
@@ -72,15 +81,19 @@ export async function POST(req) {
 
   if (emails.length) {
     reply +=
-      "\n\n⚡ EMAIL SIAP KIRIM\n" +
-      "Subject: Muhammad Iqbal Ramadhan_" + position + "\n\n" +
+      "\n\n━━━━━━━━━━━━━━━━━━━━\n" +
+      "✉️ COVER LETTER — SIAP COPY\n" +
+      "━━━━━━━━━━━━━━━━━━━━\n\n" +
+      "Subject: Lamaran Kerja – " + position + " – Muhammad Iqbal Ramadhan\n\n" +
       makeEmail(company, position) +
-      "\n\n📎 Lampirkan: Cv_Muhammad_Iqbal_Ramadhan.pdf";
+      "\n\n📎 Lampiran: Cv_Muhammad_Iqbal_Ramadhan.pdf";
   }
 
   if (forms.length) {
     reply +=
-      "\n\n⚡ DATA FORM SIAP COPY\n" +
+      "\n\n━━━━━━━━━━━━━━━━━━━━\n" +
+      "📝 DATA GOOGLE FORM — SIAP COPY\n" +
+      "━━━━━━━━━━━━━━━━━━━━\n" +
       "Nama: Muhammad Iqbal Ramadhan\n" +
       "Tanggal lahir: 08 November 2004\n" +
       "Email: ikbalramadhan506@gmail.com\n" +
