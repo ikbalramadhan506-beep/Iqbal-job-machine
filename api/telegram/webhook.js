@@ -15,6 +15,20 @@ export default async function handler(req, res) {
 
   if (!msg) return res.status(200).json({ ok: true });
 
+  // If you send a CV PDF directly to the bot, return its Telegram file_id.
+  // This lets the bot reuse the exact uploaded CV without needing external file hosting.
+  if (msg.document?.file_id && !msg.text && !msg.caption) {
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: msg.chat?.id,
+        text: "✅ CV diterima.\n\nCV_FILE_ID:\n" + msg.document.file_id
+      })
+    });
+    return res.status(200).json({ ok: true, action: "CV_FILE_ID_RETURNED" });
+  }
+
   const vacancyText = msg.text || msg.caption || "";
   if (!vacancyText.trim()) return res.status(200).json({ ok: true });
 
@@ -22,7 +36,7 @@ export default async function handler(req, res) {
   // so the result is sent to your private Telegram chat.
   const chatId = process.env.TELEGRAM_OUTPUT_CHAT_ID || msg.chat?.id;
 
-  const cvUrl = process.env.CV_URL || "";
+  const cvUrl = process.env.CV_URL || "";\n  const cvFileId = process.env.CV_FILE_ID || "";
 
   const sendTelegram = async (message) => {
     if (!chatId) return;
@@ -151,7 +165,25 @@ export default async function handler(req, res) {
 
     await sendTelegram("✉️ COVER LETTER SIAP\n\n" + result);
 
-    if (cvUrl) {
+    if (cvFileId) {
+      try {
+        const cvResponse = await fetch(`https://api.telegram.org/bot${token}/sendDocument`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: chatId,
+            document: cvFileId,
+            caption: "📄 CV terbaru — Muhammad Iqbal Ramadhan"
+          })
+        });
+        if (!cvResponse.ok) {
+          const cvError = await cvResponse.json().catch(() => ({}));
+          await sendTelegram("⚠️ Cover letter sudah siap, tetapi CV gagal dikirim: " + (cvError?.description || "Telegram error"));
+        }
+      } catch (cvError) {
+        await sendTelegram("⚠️ Cover letter sudah siap, tetapi CV gagal dikirim: " + cvError.message);
+      }
+    } else if (cvUrl) {
       try {
         const cvResponse = await fetch(`https://api.telegram.org/bot${token}/sendDocument`, {
           method: "POST",
