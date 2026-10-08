@@ -22,6 +22,8 @@ export default async function handler(req, res) {
   // so the result is sent to your private Telegram chat.
   const chatId = process.env.TELEGRAM_OUTPUT_CHAT_ID || msg.chat?.id;
 
+  const cvUrl = process.env.CV_URL || "";
+
   const sendTelegram = async (message) => {
     if (!chatId) return;
 
@@ -148,6 +150,29 @@ export default async function handler(req, res) {
     }
 
     await sendTelegram("✉️ COVER LETTER SIAP\n\n" + result);
+
+    if (cvUrl) {
+      try {
+        const cvResponse = await fetch(`https://api.telegram.org/bot${token}/sendDocument`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: chatId,
+            document: cvUrl,
+            caption: "📄 CV terbaru — Muhammad Iqbal Ramadhan"
+          })
+        });
+
+        if (!cvResponse.ok) {
+          const cvError = await cvResponse.json().catch(() => ({}));
+          await sendTelegram("⚠️ Cover letter sudah siap, tetapi CV gagal dikirim: " + (cvError?.description || "Telegram error"));
+        }
+      } catch (cvError) {
+        await sendTelegram("⚠️ Cover letter sudah siap, tetapi CV gagal dikirim: " + cvError.message);
+      }
+    } else {
+      await sendTelegram("⚠️ Cover letter sudah siap. CV belum dikirim karena CV_URL belum dipasang di Vercel.");
+    }
 
     return res.status(200).json({
       ok: true,
