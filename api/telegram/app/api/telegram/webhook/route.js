@@ -61,6 +61,7 @@ function makeCandidateBlocks() {
     ["📱 NO. HP", "088971323962"],
     ["📍 ALAMAT DOMISILI", "Gang Kober Blok B No.4, RT 002/RW 001, Sukadanau, Cikarang Barat, Kabupaten Bekasi, Jawa Barat"],
     ["🪪 ALAMAT KTP", "Jl. Siliwangi, RT 001/RW 003, Karyamukti, Panyingkiran, Majalengka, Jawa Barat 45459"],
+    ["🪪 NIK KTP", "3210180811040001"],
     ["🎓 PENDIDIKAN", "SMK Teknik Elektronika Industri – SMKN 1 Panyingkiran (2020–2023)"],
     ["💼 PENGALAMAN KERJA", "1. Helper Warehouse – PT Kaldu Sari Nabati Plant Majalengka (2023–2024)\n2. Crew Store – PT Alfaria Trijaya Tbk (2024)\n3. Helper – PT Tiki Jalur Nugraha Ekakurir (2024–2026)"],
     ["🛠️ KEAHLIAN", "Gesit, Teliti, Bertanggung jawab"],
