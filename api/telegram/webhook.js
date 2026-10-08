@@ -44,6 +44,7 @@ export default async function handler(req, res) {
 
   const profile = [
     "Nama: Muhammad Iqbal Ramadhan",
+    "Alamat: Gang Kober Blok B No.4, RT 002/RW 001, Sukadanau, Cikarang Barat, Kabupaten Bekasi, Jawa Barat",
     "Pendidikan: SMK Teknik Elektronika Industri, SMKN 1 Panyingkiran (2020-2023)",
     "Pengalaman:",
     "- Helper Warehouse, PT Kaldu Sari Nabati Plant Majalengka (2023-2024)",
