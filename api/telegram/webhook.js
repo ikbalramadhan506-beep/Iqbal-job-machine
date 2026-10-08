@@ -58,6 +58,22 @@ export default async function handler(req, res) {
     "- Siap bekerja shift"
   ].join("\n");
 
+  // Give each vacancy a deterministic writing angle so different vacancies do not collapse into the same generic letter.
+  let hash = 0;
+  for (let i = 0; i < vacancyText.length; i++) {
+    hash = ((hash << 5) - hash) + vacancyText.charCodeAt(i);
+    hash |= 0;
+  }
+  const angles = [
+    "fokus pada pengalaman paling relevan dan kesiapan kerja",
+    "fokus pada kecocokan pengalaman dengan tugas utama posisi",
+    "fokus pada ketelitian, SOP, dan kualitas kerja jika relevan",
+    "fokus pada teamwork, disiplin, dan kemampuan mengikuti target jika relevan",
+    "fokus pada pengalaman operasional dan kemampuan beradaptasi",
+    "fokus pada kontribusi konkret yang bisa diberikan sejak awal"
+  ];
+  const writingAngle = angles[Math.abs(hash) % angles.length];
+
   const prompt = [
     "Buat cover letter lamaran kerja yang benar-benar khusus untuk lowongan berikut. Jangan gunakan template cover letter yang sama berulang-ulang.",
     "",
@@ -66,6 +82,9 @@ export default async function handler(req, res) {
     "",
     "LOWONGAN:",
     vacancyText,
+    "",
+    "SUDUT PENULISAN UNTUK LOWONGAN INI:",
+    writingAngle,
     "",
     "ATURAN:",
     "1. Identifikasi perusahaan, posisi, lokasi, tugas utama, dan persyaratan dari lowongan.",
@@ -77,6 +96,7 @@ export default async function handler(req, res) {
     "6. Bahasa profesional, natural, percaya diri, dan singkat. Surat WAJIB terasa ditulis khusus untuk lowongan ini, bukan surat massal.",
     "6a. Sebutkan posisi yang dilamar dan hubungkan minimal 2 persyaratan/tugas spesifik dari lowongan dengan pengalaman pelamar.",
     "6b. Jangan memakai pembuka, urutan paragraf, atau kalimat generik yang sama seperti surat sebelumnya. Buat struktur dan penekanan mengikuti posisi yang sedang dilamar.",
+    "6c. Jangan membuat surat yang hanya mengganti nama perusahaan atau jabatan. Setidaknya 3 bagian isi harus berubah berdasarkan lowongan: alasan melamar, pengalaman yang ditonjolkan, dan hubungan pengalaman dengan tugas/syarat.",
     "7. Jangan terlalu memuji perusahaan. Fokus pada kecocokan pelamar dengan kebutuhan posisi.",
     "8. Jangan membuat klaim palsu.",
     "9. Buat cover letter sekitar 120-180 kata. Pilih pengalaman yang paling dekat dengan pekerjaan tersebut dan jelaskan relevansinya secara konkret.",
