@@ -59,7 +59,7 @@ export default async function handler(req, res) {
   ].join("\n");
 
   const prompt = [
-    "Buat cover letter lamaran kerja yang sangat relevan untuk lowongan berikut.",
+    "Buat cover letter lamaran kerja yang benar-benar khusus untuk lowongan berikut. Jangan gunakan template cover letter yang sama berulang-ulang.",
     "",
     "PROFIL PELAMAR:",
     profile,
@@ -69,17 +69,18 @@ export default async function handler(req, res) {
     "",
     "ATURAN:",
     "1. Identifikasi perusahaan dan posisi dari lowongan jika tersedia.",
-    "2. Sesuaikan isi dengan persyaratan dan kata kunci lowongan.",
+    "2. Sesuaikan isi dengan persyaratan, tugas, lokasi, dan kata kunci lowongan. Sebutkan hanya hal yang benar-benar didukung profil.",
     "3. Prioritaskan pengalaman pelamar yang paling relevan.",
     "4. Jangan mengarang pengalaman, pendidikan, sertifikat, alamat, nomor HP, email, kemampuan, atau pencapaian.",
     "5. Jangan menyebut kemampuan yang tidak ada di profil.",
-    "6. Bahasa profesional, natural, percaya diri, dan singkat.",
-    "7. Jangan terlalu memuji perusahaan.",
+    "6. Bahasa profesional, natural, percaya diri, dan singkat. Buat kalimat yang terasa ditulis khusus untuk posisi ini, bukan surat massal.",
+    "7. Jangan terlalu memuji perusahaan. Fokus pada kecocokan pelamar dengan kebutuhan posisi.",
     "8. Jangan membuat klaim palsu.",
-    "9. Buat cover letter sekitar 120-180 kata.",
+    "9. Buat cover letter sekitar 120-180 kata. Pilih pengalaman yang paling dekat dengan pekerjaan tersebut dan jelaskan relevansinya secara konkret.",
     "10. Jika nama HRD tidak tersedia, gunakan Yth. HRD [nama perusahaan].",
     "11. Buat SUBJECT EMAIL yang ringkas dan profesional.",
-    "12. Output HARUS persis dengan format:",
+    "12. Jangan mengulang susunan kalimat atau paragraf secara mekanis dari lowongan lain. Variasikan pembuka dan penekanan sesuai isi lowongan, tetapi tetap profesional dan faktual.",
+    "13. Output HARUS persis dengan format:",
     "",
     "SUBJECT:",
     "...",
@@ -87,7 +88,7 @@ export default async function handler(req, res) {
     "COVER LETTER:",
     "...",
     "",
-    "Tidak boleh ada analisis, skor, catatan, atau teks lain."
+    "Tidak boleh ada analisis, skor, catatan, atau teks lain. Jangan menulis placeholder seperti [nama perusahaan] jika nama perusahaan sebenarnya tersedia di lowongan."
   ].join("\n");
 
   try {
